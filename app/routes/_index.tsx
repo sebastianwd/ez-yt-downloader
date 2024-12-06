@@ -48,7 +48,11 @@ export async function action({ request }: ActionFunctionArgs) {
     throw new Error("No YT_PROVIDER_URLS provided");
   }
 
+  console.log("urls: ", env.YT_PROVIDER_URLS);
+
   for (const baseProviderUrl of env.YT_PROVIDER_URLS) {
+    console.log("try: ", baseProviderUrl);
+
     const ytId = ytGetId(json.url)?.id;
     if (!ytId) continue;
 
@@ -69,6 +73,8 @@ export async function action({ request }: ActionFunctionArgs) {
         const redirectResponse = await ky.get(providerUrl);
 
         mediaUrl = redirectResponse.url;
+
+        console.log("Redirect response: ", redirectResponse.url);
 
         cache.set(json.url, mediaUrl);
 
