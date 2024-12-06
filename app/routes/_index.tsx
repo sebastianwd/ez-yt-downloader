@@ -53,6 +53,7 @@ export async function action({ request }: ActionFunctionArgs) {
     if (!ytId) continue;
 
     if (cache.has(`error:${baseProviderUrl}`)) {
+      console.log("Skipping provider:", baseProviderUrl);
       continue;
     }
 
