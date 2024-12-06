@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "dockerfileLines": [
+    "FROM node:20.18.1-alpine3.19",
+    "RUN mkdir -p /usr/src/app",
+    "WORKDIR /usr/src/app",
+    "COPY ./package.json /usr/src/app/",
+    "RUN corepack enable",
+    "RUN pnpm install",
+    "COPY ./ /usr/src/app",
+    "ENV NODE_ENV production",
+    "ENV PORT 4000",
+    "ENV YT_PROVIDER_URLS=${YT_PROVIDER_URLS}",
+    "RUN pnpm run build",
+    "EXPOSE 4000",
+    "CMD [ \"pnpm\", \"start\" ]"
+  ]
+}
