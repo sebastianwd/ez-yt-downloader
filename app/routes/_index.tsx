@@ -80,6 +80,11 @@ export async function action({ request }: ActionFunctionArgs) {
 
         break;
       }
+      console.log(
+        "Error fetching mediaUrl for: ",
+        providerUrl,
+        response.statusText
+      );
 
       cache.set(`error:${providerUrl}`, "true");
     } catch (e) {
