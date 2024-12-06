@@ -37,7 +37,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
   let mediaUrl: string | null = null;
 
-  const cachedResult = await cache.get(json.url);
+  const cachedResult = cache.get(json.url);
 
   if (cachedResult) {
     console.log("Using cached result for:", json.url);
@@ -52,7 +52,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const ytId = ytGetId(json.url)?.id;
     if (!ytId) continue;
 
-    if (await cache.has(`error:${baseProviderUrl}`)) {
+    if (cache.has(`error:${baseProviderUrl}`)) {
       continue;
     }
 
@@ -69,13 +69,14 @@ export async function action({ request }: ActionFunctionArgs) {
 
         mediaUrl = redirectResponse.url;
 
-        await cache.set(json.url, mediaUrl);
+        cache.set(json.url, mediaUrl);
 
         break;
       }
+
+      cache.set(`error:${providerUrl}`, "true");
     } catch (e) {
       console.error("Error fetching mediaUrl for: ", providerUrl, e);
-      await cache.set(`error:${providerUrl}`, "true");
 
       continue;
     }
