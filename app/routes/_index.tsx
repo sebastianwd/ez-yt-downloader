@@ -44,6 +44,10 @@ export async function action({ request }: ActionFunctionArgs) {
     return cachedResult;
   }
 
+  if (env.YT_PROVIDER_URLS.length === 0) {
+    throw new Error("No YT_PROVIDER_URLS provided");
+  }
+
   for (const baseProviderUrl of env.YT_PROVIDER_URLS) {
     const ytId = ytGetId(json.url)?.id;
     if (!ytId) continue;
