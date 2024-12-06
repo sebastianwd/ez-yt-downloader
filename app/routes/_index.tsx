@@ -1,8 +1,4 @@
-import type {
-  ActionFunctionArgs,
-  HeadersFunction,
-  MetaFunction,
-} from "@remix-run/node";
+import type { ActionFunctionArgs, MetaFunction } from "@remix-run/node";
 import ky from "ky";
 import { env } from "~/utils/constants";
 import { ytGetId } from "~/utils/get-yt-id";
@@ -48,8 +44,6 @@ export async function action({ request }: ActionFunctionArgs) {
     throw new Error("No YT_PROVIDER_URLS provided");
   }
 
-  console.log("urls: ", env.YT_PROVIDER_URLS);
-
   for (const baseProviderUrl of env.YT_PROVIDER_URLS) {
     console.log("try: ", baseProviderUrl);
 
@@ -70,11 +64,9 @@ export async function action({ request }: ActionFunctionArgs) {
       });
 
       if (response.headers.get("content-type")?.includes("video")) {
-        const redirectResponse = await ky.get(providerUrl);
+        // const redirectResponse = await ky.get(providerUrl);
 
-        mediaUrl = redirectResponse.url;
-
-        console.log("Redirect response: ", redirectResponse.url);
+        mediaUrl = providerUrl;
 
         cache.set(json.url, mediaUrl);
 
@@ -88,7 +80,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
       cache.set(`error:${providerUrl}`, "true");
     } catch (e) {
-      console.error("Error fetching mediaUrl for: ", providerUrl, e);
+      console.error("Unexpected error fetching mediaUrl for: ", providerUrl, e);
 
       continue;
     }
@@ -96,13 +88,6 @@ export async function action({ request }: ActionFunctionArgs) {
 
   return mediaUrl;
 }
-
-export const headers: HeadersFunction = () => {
-  return {
-    "Cross-Origin-Embedder-Policy": "require-corp",
-    "Cross-Origin-Opener-Policy": "same-origin",
-  };
-};
 
 export default function Index() {
   return <IndexPage />;

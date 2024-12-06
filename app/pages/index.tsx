@@ -1,14 +1,10 @@
 /* eslint-disable jsx-a11y/media-has-caption */
-import { fetchFile } from "@ffmpeg/util";
-import { useFetcher } from "@remix-run/react";
+import { Link, useFetcher } from "@remix-run/react";
 import { Loader2 } from "lucide-react";
-import { useEffect, useRef, useState, type ComponentProps } from "react";
+import { useEffect, useState } from "react";
 import { Arrow8 } from "~/components/arrow";
-import { VideoDropzone } from "~/components/dropzone";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-
-import { createFFmpeg } from "~/lib/ffmpeg";
 
 export const IndexPage = () => {
   const fetcher = useFetcher<string>();
@@ -17,72 +13,11 @@ export const IndexPage = () => {
 
   const [videoSrc, setVideoSrc] = useState("");
 
-  const [converting, setConverting] = useState(false);
-
-  const ffmpegRef = useRef<Awaited<ReturnType<typeof createFFmpeg>>>();
-
   useEffect(() => {
     if (actionData) {
       setVideoSrc(actionData);
     }
   }, [actionData]);
-
-  const onUpload: ComponentProps<typeof VideoDropzone>["onUpload"] = async (
-    video
-  ) => {
-    setConverting(true);
-
-    if (!ffmpegRef.current) {
-      ffmpegRef.current = await createFFmpeg();
-    }
-
-    const ffmpeg = ffmpegRef.current;
-
-    if (!ffmpeg || !video) {
-      setConverting(false);
-      console.error("Error converting video to MP3: ffmpeg or video is null");
-      return;
-    }
-
-    const inputFileName = "input.mp4";
-    const outputFileName = "output.mp3";
-
-    try {
-      await ffmpeg.writeFile(inputFileName, await fetchFile(video));
-
-      await ffmpeg.exec([
-        "-i",
-        inputFileName,
-        "-vn",
-        "-acodec",
-        "libmp3lame",
-        outputFileName,
-      ]);
-
-      // Read the MP3 data from the FFmpeg virtual file system
-      const mp3Data = await ffmpeg.readFile(outputFileName);
-      const data = new Uint8Array(mp3Data as ArrayBuffer);
-
-      // Create a Blob URL for the MP3 data
-      const mp3BlobUrl = URL.createObjectURL(
-        new Blob([data.buffer], { type: "audio/mpeg" })
-      );
-
-      const link = document.createElement("a");
-      link.href = mp3BlobUrl;
-      link.download = `${video.name}.mp3`; // Set the desired file name
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      console.log("MP3 Blob URL:", mp3BlobUrl);
-    } catch (error) {
-      console.error("Error converting video to MP3:", error);
-      alert("Error converting video to MP3");
-    } finally {
-      setConverting(false);
-    }
-  };
 
   return (
     <div className="flex flex-col min-h-svh container mx-auto">
@@ -132,6 +67,7 @@ export const IndexPage = () => {
                   <video
                     controls
                     src={videoSrc}
+                    preload="auto"
                     className="w-full aspect-video"
                   />
                   <div className="absolute -bottom-10 right-5 flex flex-col items-center pointer-events-none">
@@ -151,8 +87,11 @@ export const IndexPage = () => {
           <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-blue-500 to-purple-600 text-transparent bg-clip-text">
             Already have a video?
           </h2>
-          <p className="text-base mb-3">Convert it to mp3:</p>
-          <VideoDropzone onUpload={onUpload} disabled={converting} />
+          <Link to="/convert-video" reloadDocument>
+            <Button variant="gradient" className="w-fit">
+              Convert it to mp3
+            </Button>
+          </Link>
         </section>
       </main>
       <footer className="text-center mt-auto">
