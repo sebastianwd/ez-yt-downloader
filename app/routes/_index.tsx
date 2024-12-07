@@ -1,5 +1,4 @@
 import type { ActionFunctionArgs, MetaFunction } from "@remix-run/node";
-import ky from "ky";
 import { env } from "~/utils/constants";
 import { ytGetId } from "~/utils/get-yt-id";
 import { IndexPage } from "~/pages";
@@ -31,8 +30,6 @@ export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
   const json = (await Object.fromEntries(formData)) as ActionData;
 
-  let mediaUrl: string | null = null;
-
   const cachedResult = cache.get(json.url);
 
   if (cachedResult) {
@@ -44,49 +41,17 @@ export async function action({ request }: ActionFunctionArgs) {
     throw new Error("No YT_PROVIDER_URLS provided");
   }
 
-  for (const baseProviderUrl of env.YT_PROVIDER_URLS) {
-    console.log("try: ", baseProviderUrl);
+  const ytId = ytGetId(json.url)?.id;
 
-    const ytId = ytGetId(json.url)?.id;
-    if (!ytId) continue;
-
-    if (cache.has(`error:${baseProviderUrl}`)) {
-      console.log("Skipping provider:", baseProviderUrl);
-      continue;
-    }
-
-    const providerUrl = getCompleteProviderUrl(baseProviderUrl, ytId);
-
-    try {
-      const response = await ky.head(providerUrl, {
-        timeout: 10000,
-        throwHttpErrors: false,
-      });
-
-      if (response.headers.get("content-type")?.includes("video")) {
-        // const redirectResponse = await ky.get(providerUrl);
-
-        mediaUrl = providerUrl;
-
-        cache.set(json.url, mediaUrl);
-
-        break;
-      }
-      console.log(
-        "Error fetching mediaUrl for: ",
-        providerUrl,
-        response.statusText
-      );
-
-      cache.set(`error:${providerUrl}`, "true");
-    } catch (e) {
-      console.error("Unexpected error fetching mediaUrl for: ", providerUrl, e);
-
-      continue;
-    }
+  if (!ytId) {
+    throw new Error("No video ID found in URL");
   }
 
-  return mediaUrl;
+  const formattedUrls = env.YT_PROVIDER_URLS.map((url) =>
+    Buffer.from(getCompleteProviderUrl(url, ytId)).toString("base64")
+  );
+
+  return formattedUrls;
 }
 
 export default function Index() {

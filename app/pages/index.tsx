@@ -2,22 +2,23 @@
 import { Link, useFetcher } from "@remix-run/react";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import ReactPlayer from "react-player";
 import { Arrow8 } from "~/components/arrow";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 
 export const IndexPage = () => {
-  const fetcher = useFetcher<string>();
+  const fetcher = useFetcher<string[]>();
 
   const actionData = fetcher.data;
 
-  const [videoSrc, setVideoSrc] = useState("");
+  const [videoChoice, setVideoChoice] = useState(0);
 
   useEffect(() => {
-    if (actionData) {
-      setVideoSrc(actionData);
+    if (fetcher.state === "submitting") {
+      setVideoChoice(0);
     }
-  }, [actionData]);
+  }, [fetcher.state]);
 
   return (
     <div className="flex flex-col min-h-svh container mx-auto">
@@ -61,13 +62,21 @@ export const IndexPage = () => {
                 </Button>
               </fieldset>
             </fetcher.Form>
-            {videoSrc && (
+            {actionData && (
               <>
                 <div className="relative">
-                  <video
+                  <ReactPlayer
+                    width="100%"
+                    height="100%"
+                    stopOnUnmount={false}
                     controls
-                    src={videoSrc}
-                    preload="auto"
+                    url={atob(actionData[videoChoice])}
+                    onError={(error) => {
+                      console.log(error);
+                      if (error) {
+                        setVideoChoice((prev) => prev + 1);
+                      }
+                    }}
                     className="w-full aspect-video"
                   />
                   <div className="absolute -bottom-10 right-5 flex flex-col items-center pointer-events-none">
