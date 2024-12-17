@@ -74,7 +74,9 @@ export const IndexPage = () => {
                     onError={(error) => {
                       console.log(error);
                       if (error) {
-                        setVideoChoice((prev) => prev + 1);
+                        if (videoChoice < actionData.length - 1) {
+                          setVideoChoice((prev) => prev + 1);
+                        }
                       }
                     }}
                     className="w-full aspect-video"

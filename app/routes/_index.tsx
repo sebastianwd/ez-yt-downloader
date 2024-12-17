@@ -23,6 +23,7 @@ const getCompleteProviderUrl = (url: string, id: string) => {
   const providerUrl = new URL(`${url}/latest_version`);
 
   providerUrl.searchParams.append("id", id);
+  providerUrl.searchParams.append("itag", "18");
   return providerUrl.toString();
 };
 
